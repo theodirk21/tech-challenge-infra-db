@@ -1,0 +1,6 @@
+# Copie este arquivo para terraform.tfvars e preencha com os valores reais.
+# terraform.tfvars NÃO deve ser commitado (já está no .gitignore).
+
+vpc_id                 = "vpc-xxxxxxxx"
+private_subnet_ids     = ["subnet-aaaaaaaa", "subnet-bbbbbbbb"]
+eks_security_group_id  = "sg-xxxxxxxx"
