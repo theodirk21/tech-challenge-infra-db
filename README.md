@@ -43,6 +43,14 @@ flowchart LR
 
 </details>
 
+## Documentação relacionada
+
+- [Justificativa Escolha do Banco de Dados](./docs/Justificativa-Formal-Escolha-do-Banco-de-Dados.md) — explica por que PostgreSQL e Amazon RDS foram escolhidos para este projeto.
+- [Modelo Relacional e Diagrama](./docs/Modelo-Relacional-e-Diagrama-ER.md) — descreve o modelo relacional do banco e inclui o diagrama correspondente.
+- [RFC-0001](./docs/RFC-0001-banco-de-dados.md) — detalha a decisão de usar RDS em vez de Postgres em pod no EKS.
+- [ADR-0001](./docs/ADR-0001-banco-de-dados-gerenciado.md) — detalha a decisão de usar um banco de dados gerenciado (RDS) em vez de gerenciar o PostgreSQL no EKS.
+
+
 ## Pré-requisitos
 
 - VPC e subnets privadas já existentes
