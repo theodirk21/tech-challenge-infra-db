@@ -1,11 +1,11 @@
 # Justificativa Formal da Escolha do Banco de Dados
 
-| Campo   | Valor                                                             |
-|---------|--------------------------------------------------------------------|
-| Projeto | Tech Challenge — Sistema de Ordem de Serviço de Oficina Mecânica    |
-| Repositórios relacionados | [`tech-challenge-fase-1`](https://github.com/rafaelllsilva/tech-challenge-fase-1) (aplicação) e [`tech-challenge-infra-db`](https://github.com/theodirk21/tech-challenge-infra-db) (infraestrutura) |
-| Data    | 2026-08-31                                                          |
-| Autor   | Theo Dirk                                                           |
+| Campo   | Valor                                                                                                                                                                                    |
+|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Projeto | Tech Challenge — Sistema de Ordem de Serviço de Oficina Mecânica                                                                                                                         |
+| Repositórios relacionados | [`tech-challenge-app`](https://github.com/Thiarges/tech-challenge-app) (aplicação) e [`tech-challenge-infra-db`](https://github.com/theodirk21/tech-challenge-infra-db) (infraestrutura) |
+| Data    | 31-08-2026                                                                                                                                                                               |
+| Autor   | Theo Dirk                                                                                                                                                                                |
 
 ## 1. Natureza do domínio
 
@@ -38,5 +38,5 @@ Essa decisão está documentada em detalhe no **RFC-0001** (`Documentação de a
 | Encriptação de storage | Configuração manual | Nativa (`storage_encrypted = true`) |
 
 ## Referências
-- RFC-0001 (infraestrutura do banco): `Documentação de arquitetura de soluções/RFCs/RFC-0001-banco-de-dados.md`.
-- Modelo relacional detalhado: `Documentação de arquitetura de soluções/Banco de Dados/Modelo-Relacional-e-Diagrama-ER.md`.
+- [`RFC-0001 (infraestrutura do banco)`](RFC-0001-banco-de-dados.md).
+- [`Modelo Relacional Detalhado`](Modelo-Relacional-e-Diagrama-ER.md).
