@@ -1,15 +1,15 @@
 # Modelo Relacional e Diagrama ER
 
-| Campo   | Valor                                                             |
-|---------|--------------------------------------------------------------------|
-| Projeto | Tech Challenge — Sistema de Ordem de Serviço de Oficina Mecânica    |
-| Repositórios relacionados | [`tech-challenge-fase-1`](https://github.com/rafaelllsilva/tech-challenge-fase-1) (aplicação) e [`tech-challenge-infra-db`](https://github.com/theodirk21/tech-challenge-infra-db) (infraestrutura) |
-| Data    | 2026-08-31                                                          |
-| Autor   | Theo Dirk                                                           |
+| Campo   | Valor                                                                                                                                                                                    |
+|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Projeto | Tech Challenge — Sistema de Ordem de Serviço de Oficina Mecânica                                                                                                                         |
+| Repositórios relacionados | [`tech-challenge-app`](https://github.com/Thiarges/tech-challenge-app) (aplicação) e [`tech-challenge-infra-db`](https://github.com/theodirk21/tech-challenge-infra-db) (infraestrutura) |
+| Data    | 31-08-2026                                                                                                                                                                               |
+| Autor   | Theo Dirk                                                                                                                                                                                |
 
 ## 1. Diagrama Entidade-Relacionamento (ER)
 
-Modelo extraído das migrations Flyway (`V001` a `V013`) e das entidades JPA da aplicação (`tech-challenge-fase-1`), todas residentes no schema **`oficina`**:
+Modelo extraído das migrations Flyway (`V001` a `V016`) e das entidades JPA da aplicação (`tech-challenge-app`), considerando a evolução do schema relacional usada atualmente pela aplicação:
 
 ![Diagrama ER](../doc-archives/er-diagram.png)
 
@@ -25,6 +25,7 @@ erDiagram
     TIPO_PECA ||--o{ PECA : "classifica"
     ORDEM_DE_SERVICO ||--o{ SERVICO : "executa"
     TIPO_SERVICO ||--o{ SERVICO : "classifica"
+    ORDEM_DE_SERVICO ||--o{ ORDEM_DE_SERVICO_STATUS_HISTORICO : "tem histórico de status"
 
     CLIENTE {
         bigint id PK
@@ -89,6 +90,13 @@ erDiagram
         varchar role "CLIENTE, MECANICO, ATENDENTE, GERENTE"
         bigint cliente_id FK "nullable"
     }
+
+    ORDEM_DE_SERVICO_STATUS_HISTORICO {
+        bigint id PK
+        bigint id_ordem_de_servico FK
+        varchar status
+        timestamptz alterado_em
+    }
 ```
 
 </details>
@@ -116,8 +124,9 @@ Assim como `tipo_peca`, `tipo_servico` é um catálogo (nome, valor) reaproveita
 ### 2.7 `cliente` (1) — (0..N) `usuario` — relacionamento opcional
 Nem todo usuário do sistema é um cliente (mecânico, atendente e gerente também logam, mas não têm vínculo com `cliente`). Por isso a FK é **opcional**: `usuario.cliente_id → cliente.id`, com `ON DELETE SET NULL` — se o cliente for removido, o usuário não é apagado, apenas perde o vínculo.
 
+### 2.8 `ordem_de_servico` (1) — (N) `ordem_de_servico_status_historico`
+Cada mudança relevante de status da OS pode ser registrada em histórico, preservando rastreabilidade temporal. A FK atual é `ordem_de_servico_status_historico.id_ordem_de_servico → ordem_de_servico.id`, com exclusão em cascata (`ON DELETE CASCADE`) para remover o histórico quando a OS for excluída.
+
 ## Referências
-- Migrations: [`tech-challenge-fase-1`](https://github.com/rafaelllsilva/tech-challenge-fase-1) — `app/src/main/resources/db/migration/V001` a `V013`.
-- Entidades JPA: `cliente`, `veiculo`, `os` (OrdemDeServico), `peca`, `servico`, `usuario` em `app/src/main/java/com/fiap/techchallenge/` do mesmo repositório.
-- Configuração de schema: `app/src/main/resources/application.properties`.
-- Justificativa da escolha do banco: `Documentação de arquitetura de soluções/Banco de Dados/Justificativa-Formal-Escolha-do-Banco-de-Dados.md`.
+- Migrations: [`tech-challenge-app`](https://github.com/Thiarges/tech-challenge-app) — `app/src/main/resources/db/migration/V001` a `V016`.
+- [`Justificativa da escolha do banco`](./Justificativa-Formal-Escolha-do-Banco-de-Dados.md).
