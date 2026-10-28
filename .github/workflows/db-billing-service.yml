@@ -1,36 +1,36 @@
-name: Terraform - DB billing-service
+name: Terraform - DB os-service
 
 on:
   push:
     branches: [main]
     paths:
-      - "services/billing-service/**"
+      - "services/os-service/**"
       - "modules/**"
-      - ".github/workflows/db-billing-service.yml"
+      - ".github/workflows/db-os-service.yml"
   pull_request:
     branches: [main]
     paths:
-      - "services/billing-service/**"
+      - "services/os-service/**"
       - "modules/**"
-      - ".github/workflows/db-billing-service.yml"
+      - ".github/workflows/db-os-service.yml"
 
 permissions:
   contents: read
 
 # Um deploy por vez por serviço; serviços diferentes rodam em paralelo.
 concurrency:
-  group: db-billing-service
+  group: db-os-service
   cancel-in-progress: false
 
 env:
   TF_VERSION: "1.10.5"
   AWS_REGION: "us-east-1"
-  WORKING_DIR: services/billing-service
+  WORKING_DIR: services/os-service
 
 jobs:
   # Pull request: valida e mostra o plano, sem aplicar nada.
   plan:
-    name: Fmt, Validate and Plan (Billing Service)
+    name: Fmt, Validate and Plan (OS Service)
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -55,9 +55,9 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          terraform init \
-          -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}"
+        env:
+          TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+        run: terraform init -backend-config="bucket=${TF_BACKEND_BUCKET}"
 
       - name: Terraform Validate
         working-directory: ${{ env.WORKING_DIR }}
@@ -66,10 +66,14 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform plan -no-color -input=false
+        env:
+          TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
+          TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS }}
+          TF_VAR_eks_security_group_id: ${{ secrets.EKS_SECURITY_GROUP_ID }}
 
   # Merge/push na main: plano e apply automatizados, com o environment production.
   apply:
-    name: Plan and Apply (Billing Service)
+    name: Plan and Apply (OS Service)
     if: github.event_name == 'push'
     environment: production
     runs-on: ubuntu-latest
@@ -95,9 +99,9 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          terraform init \
-          -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}"
+        env:
+          TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+        run: terraform init -backend-config="bucket=${TF_BACKEND_BUCKET}"
 
       - name: Terraform Validate
         working-directory: ${{ env.WORKING_DIR }}
@@ -106,7 +110,15 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform plan -no-color -input=false
+        env:
+          TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
+          TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS }}
+          TF_VAR_eks_security_group_id: ${{ secrets.EKS_SECURITY_GROUP_ID }}
 
       - name: Terraform Apply
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform apply -auto-approve -input=false
+        env:
+          TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
+          TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS }}
+          TF_VAR_eks_security_group_id: ${{ secrets.EKS_SECURITY_GROUP_ID }}
