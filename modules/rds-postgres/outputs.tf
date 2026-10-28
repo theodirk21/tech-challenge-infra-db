@@ -23,6 +23,11 @@ output "db_security_group_id" {
   value       = aws_security_group.db.id
 }
 
+output "secrets_manager_secret_name" {
+  description = "Nome (previsível) do secret com as credenciais; o microsserviço lê por este nome"
+  value       = aws_secretsmanager_secret.db_credentials.name
+}
+
 output "secrets_manager_secret_arn" {
   description = "ARN do secret no Secrets Manager com as credenciais completas de acesso"
   value       = aws_secretsmanager_secret.db_credentials.arn

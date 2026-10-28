@@ -1,9 +1,3 @@
-variable "aws_region" {
-  description = "Região da AWS onde o banco será criado"
-  type        = string
-  default     = "us-east-1"
-}
-
 variable "project_name" {
   description = "Nome do projeto, usado como prefixo dos recursos"
   type        = string
@@ -14,6 +8,16 @@ variable "environment" {
   description = "Ambiente (o edital só exige produção, mas fica parametrizado)"
   type        = string
   default     = "prod"
+}
+
+variable "service_name" {
+  description = "Nome do microsserviço dono do banco (ex.: os-service). Entra em todos os nomes de recurso."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{1,30}$", var.service_name))
+    error_message = "service_name deve usar minúsculas, números e hífen, começando por letra (2 a 31 caracteres)."
+  }
 }
 
 variable "vpc_id" {
@@ -32,15 +36,13 @@ variable "eks_security_group_id" {
 }
 
 variable "db_name" {
-  description = "Nome do banco de dados dentro da instância"
+  description = "Nome do banco de dados dentro da instância (letras, números e underscore)"
   type        = string
-  default     = "techchallenge"
 }
 
 variable "db_username" {
   description = "Usuário master do banco"
   type        = string
-  default     = "techchallenge_admin"
 }
 
 variable "postgres_version" {

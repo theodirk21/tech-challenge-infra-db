@@ -1,0 +1,5 @@
+# Copie este arquivo para terraform.tfvars e ajuste se necessário.
+# terraform.tfvars NÃO deve ser commitado (já está no .gitignore).
+
+# true somente se a conta permitir criar policies IAM
+create_access_policy = false
