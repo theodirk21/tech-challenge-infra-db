@@ -1,20 +1,13 @@
-terraform {
-  required_version = ">= 1.5"
+locals {
+  # Prefixo único por serviço: evita colisão de nomes quando o módulo é
+  # instanciado mais de uma vez (OS Service e Execution Service).
+  name_prefix = "${var.project_name}-${var.environment}-${var.service_name}"
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    Service     = var.service_name
   }
-}
-
-provider "aws" {
-  region = var.aws_region
 }
 
 resource "random_password" "db_password" {
@@ -24,8 +17,16 @@ resource "random_password" "db_password" {
 }
 
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name        = "${var.project_name}-${var.environment}-db-credentials"
-  description = "Credenciais de acesso ao RDS Postgres do Tech Challenge"
+  # Nome previsível: cada microsserviço lê o seu secret pelo nome,
+  # sem depender do state (terraform_remote_state) deste repositório.
+  name        = "${local.name_prefix}-db-credentials"
+  description = "Credenciais de acesso ao RDS Postgres do ${var.service_name}"
+
+  # Exclusão imediata: sem isso, um destroy seguido de novo apply com o mesmo
+  # nome falha, pois o secret fica "agendado para exclusão" por 7 a 30 dias.
+  recovery_window_in_days = 0
+
+  tags = local.tags
 }
 
 resource "aws_secretsmanager_secret_version" "db_credentials" {
@@ -41,19 +42,17 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
 }
 
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.project_name}-${var.environment}-db-subnet-group"
+  name       = "${local.name_prefix}-db-subnet-group"
   subnet_ids = var.private_subnet_ids
 
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-db-subnet-group"
-    Environment = var.environment
-    Project     = var.project_name
-  }
+  tags = merge(local.tags, {
+    Name = "${local.name_prefix}-db-subnet-group"
+  })
 }
 
 resource "aws_security_group" "db" {
-  name        = "${var.project_name}-${var.environment}-db-sg"
-  description = "Permite acesso ao RDS apenas a partir do cluster EKS"
+  name        = "${local.name_prefix}-db-sg"
+  description = "Permite acesso ao RDS do ${var.service_name} apenas a partir do cluster EKS"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -71,15 +70,13 @@ resource "aws_security_group" "db" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-db-sg"
-    Environment = var.environment
-    Project     = var.project_name
-  }
+  tags = merge(local.tags, {
+    Name = "${local.name_prefix}-db-sg"
+  })
 }
 
 resource "aws_db_parameter_group" "this" {
-  name   = "${var.project_name}-${var.environment}-pg-params"
+  name   = "${local.name_prefix}-pg-params"
   family = var.db_parameter_group_family
 
   parameter {
@@ -91,10 +88,12 @@ resource "aws_db_parameter_group" "this" {
     name  = "log_min_duration_statement"
     value = "200"
   }
+
+  tags = local.tags
 }
 
 resource "aws_db_instance" "this" {
-  identifier     = "${var.project_name}-${var.environment}-db"
+  identifier     = "${local.name_prefix}-db"
   engine         = "postgres"
   engine_version = var.postgres_version
 
@@ -119,9 +118,7 @@ resource "aws_db_instance" "this" {
   skip_final_snapshot     = var.skip_final_snapshot
   deletion_protection     = var.deletion_protection
 
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-db"
-    Environment = var.environment
-    Project     = var.project_name
-  }
+  tags = merge(local.tags, {
+    Name = "${local.name_prefix}-db"
+  })
 }

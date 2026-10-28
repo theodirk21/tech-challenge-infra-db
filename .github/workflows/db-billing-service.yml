@@ -1,0 +1,112 @@
+name: Terraform - DB billing-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/billing-service/**"
+      - "modules/**"
+      - ".github/workflows/db-billing-service.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/billing-service/**"
+      - "modules/**"
+      - ".github/workflows/db-billing-service.yml"
+
+permissions:
+  contents: read
+
+# Um deploy por vez por serviço; serviços diferentes rodam em paralelo.
+concurrency:
+  group: db-billing-service
+  cancel-in-progress: false
+
+env:
+  TF_VERSION: "1.7.5"
+  AWS_REGION: "us-east-1"
+  WORKING_DIR: services/billing-service
+
+jobs:
+  # Pull request: valida e mostra o plano, sem aplicar nada.
+  plan:
+    name: Fmt, Validate and Plan (Billing Service)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}"
+
+      - name: Terraform Validate
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform plan -no-color -input=false
+
+  # Merge/push na main: plano e apply automatizados, com o environment production.
+  apply:
+    name: Plan and Apply (Billing Service)
+    if: github.event_name == 'push'
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}"
+
+      - name: Terraform Validate
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform plan -no-color -input=false
+
+      - name: Terraform Apply
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform apply -auto-approve -input=false
