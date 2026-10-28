@@ -109,7 +109,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ env.WORKING_DIR }}
-        run: terraform plan -no-color -input=false
+        run: terraform plan -no-color -lock=false
         env:
           TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
           TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS }}
@@ -117,7 +117,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ${{ env.WORKING_DIR }}
-        run: terraform apply -auto-approve -input=false
+        run: terraform apply -auto-approve -lock=false
         env:
           TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
           TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS }}
